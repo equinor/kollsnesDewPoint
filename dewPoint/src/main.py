@@ -22,7 +22,7 @@ class dewPointCalc(BaseModel):
         inStream = stream(gascondensateFluid)
         inStream.setPressure(self.pressure_dpscrubber, "bara")
         inStream.setTemperature(self.temperature_dpscrubber, "C")
-        inStream.setFlowRate(self.feedGasFlow, 'MSm3/day')
+        #inStream.setFlowRate(self.feedGasFlow, 'MSm3/day')
 
         dewpSep = separator(inStream)
         inStream.run()

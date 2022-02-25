@@ -9,7 +9,7 @@ class dewPointCalc(BaseModel):
     MEGflow: float=1000.0
     feedGasFlow: float=20.0
     temperature_dpscrubber: float=-25.0
-    pressure_dpscrubber: float=-30.0
+    pressure_dpscrubber: float=30.0
     
     def calcDewPoint(self):
         feedGas = {

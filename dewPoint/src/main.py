@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from neqsim.thermo.thermoTools import fluid_df
 from neqsim.process import stream, separator
 import pandas as pd
-from neqsim.process import expander, mixer, stream, cooler, valve, separator3phase,clearProcess,runProcess
+from neqsim.process import expander, mixer, stream, cooler, valve, separator3phase,clearProcess,runProcess, saturator
+from neqsim.thermo import phaseenvelope
 
 class dewPointCalc(BaseModel):
     feedFlowRateTrain1: float=11411.9
@@ -16,17 +17,17 @@ class dewPointCalc(BaseModel):
     glycolFlow: float=10
 
     def calcDewPoint(self):
-        feedFluid = {'ComponentName':  ['water', 'MEG', "methane", "ethane", "C6", "C7"], 
-                'MolarComposition[-]':  [1.0, 0.0, 0.5, 0.1,0.1, 0.3], 
-                'MolarMass[kg/mol]': [None,None, None,None, 0.091, 0.19],
-                'RelativeDensity[-]': [None,None,None,None, 0.7, 0.86 ]
+        feedFluid = {'ComponentName':  ['water', 'MEG', "methane", "ethane", "propane","i-butane", "n-butane","i-pentane","n-pentane", "C6", "C7", "C8", "C9", "C10"], 
+                'MolarComposition[-]':  [0.0, 0.0, 80.0, 6.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5, 0.5], 
+                'MolarMass[kg/mol]': [None,None, None,None,None,None, None,None,None,0.091, 0.110, 0.13, 0.15, 0.20],
+                'RelativeDensity[-]': [None,None, None,None,None,None, None,None,None, 0.7, 0.78, 0.8, 0.82, 0.83]
         }
 
         reservoirFluiddf = pd.DataFrame(feedFluid)
         fluid7 = fluid_df(reservoirFluiddf)
 
         glycolFluid = fluid7.clone()
-        glycolFluid.setMolarComposition([0.0, 1.0, 0.0, 0.0,0.0, 0.0])
+        glycolFluid.setMolarComposition([0.0, 1.0, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0])
 
         clearProcess()
         feedStream = stream(fluid7)
@@ -41,16 +42,15 @@ class dewPointCalc(BaseModel):
 
         slugCatcher = separator3phase(feedStream)
 
-        gasFromSlugCatcher = stream(slugCatcher.getGasOutStream())
+        saturatedGasFromSlugCatcher = saturator(slugCatcher.getGasOutStream(), 'water saturator')
 
-        valve1 = valve(gasFromSlugCatcher)
+        valve1 = valve(saturatedGasFromSlugCatcher.getOutStream())
         valve1.setOutletPressure(self.sep1Pressure)
 
         sep1 = separator3phase(valve1.getOutStream())
 
         cooler1 = cooler(sep1.getGasOutStream())
         cooler1.setOutTemperature(self.cooler1T, 'C')
-
         sep2 = separator3phase(cooler1.getOutStream())
 
         mixer1 = mixer()
@@ -66,11 +66,20 @@ class dewPointCalc(BaseModel):
         runProcess()
 
         gasToExport.setPressure(70.0, 'bara')
+        hydrateT = gasToExport.getHydrateEquilibriumTemperature()-273.15
 
-        return [gasToExport.getHydrateEquilibriumTemperature()-273.15]
+        fluidExport = gasToExport.getFluid().clone()
+        fluidExport.removeComponent("water")
+        fluidExport.removeComponent("MEG")
+        phaseEnvResults = phaseenvelope(fluidExport)
+        cricobar = phaseEnvResults.get("cricondenbar")[1]
+        cricotherm = phaseEnvResults.get("cricondentherm")[0]-273.15
+
+        return [hydrateT, cricotherm]
 
 class dewPointResults(BaseModel):
     waterDewPoint: float
+    hydrocarbonDewPoint: float
 
 
 app = FastAPI()
@@ -90,10 +99,11 @@ def read_root():
     return HTMLResponse(content=html_content, status_code=200)
 
  
-@app.post("/kol2/waterDewPoint",response_model=dewPointResults,description="Calculate the water dew point of the gas")
+@app.post("/kol2/waterDewPoint",response_model=dewPointResults,description="Calculate the water and HC dew point of the gas")
 def waterDewPoint(dewPointFunc:dewPointCalc):
     results = dewPointFunc.calcDewPoint()
     results = {
-        'waterDewPoint': float(results[0])
+        'waterDewPoint': float(results[0]),
+        'hydrocarbonDewPoint':float(results[1])
     }
     return results

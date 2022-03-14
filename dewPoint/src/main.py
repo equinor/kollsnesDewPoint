@@ -5,7 +5,7 @@ from neqsim.thermo.thermoTools import fluid_df
 from neqsim.process import stream, separator
 import pandas as pd
 from neqsim.process import expander, mixer, stream, cooler, valve, separator3phase,clearProcess,runProcess, saturator
-from neqsim.thermo import phaseenvelope
+from neqsim.thermo import phaseenvelope,freeze
 
 class dewPointCalc(BaseModel):
     feedFlowRateTrain1: float=11411.9
@@ -66,21 +66,46 @@ class dewPointCalc(BaseModel):
         gasToExport = stream(sep3.getGasOutStream())
 
         runProcess()
-        gasToExport.setPressure(70.0, 'bara')
-        hydrateT = gasToExport.getHydrateEquilibriumTemperature()-273.15
 
-        fluidExport = gasToExport.getFluid().clone()
-        fluidExport.removeComponent("water")
-        fluidExport.removeComponent("MEG")
-        phaseEnvResults = phaseenvelope(fluidExport)
-        cricobar = phaseEnvResults.get("cricondenbar")[1]
-        cricotherm = phaseEnvResults.get("cricondentherm")[0]-273.15
+        try:
+            gasToExport.setPressure(70.0, 'bara')
+            gasToExport.setTemperature(-10.0, 'C')
+            hydrateT = gasToExport.getHydrateEquilibriumTemperature()-273.15
+            hydrateTDewTScrubber = expander1.getOutStream().getHydrateEquilibriumTemperature()-273.15
+        except:
+            print("Could not find hydrate temperatures - returning -9999")
+            hydrateT = -9999
+            hydrateTDewTScrubber = -9999
 
-        return [hydrateT, cricotherm]
+        #MEG freeze chack
+        MEGfreezeFluid = expander1.getOutStream().getFluid().clone()
+        MEGfreezeFluid.setSolidPhaseCheck('MEG')
+        MEGfreezeFluid.setTemperature(-10.0, 'C')
+        try:
+            freeze(MEGfreezeFluid)
+            MEGfrezeT = MEGfreezeFluid.getTemperature('C')
+        except:
+            print("Could not find freezing point of MEG - returning -9999")
+            MEGfrezeT = -9999
+
+        try:
+            fluidExport = gasToExport.getFluid().clone()
+            fluidExport.removeComponent("water")
+            fluidExport.removeComponent("MEG")
+            phaseEnvResults = phaseenvelope(fluidExport)
+            cricobar = phaseEnvResults.get("cricondenbar")[1]
+            cricotherm = phaseEnvResults.get("cricondentherm")[0]-273.15
+        except:
+            print("Could not calculate phase envelope - returning -9999")
+            cricotherm = -9999
+        
+        return [hydrateT, cricotherm, hydrateTDewTScrubber, MEGfrezeT]
 
 class dewPointResults(BaseModel):
     waterDewPoint: float
     hydrocarbonDewPoint: float
+    hydrateTDewTScrubber: float
+    MEGfrezeT: float
 
 
 app = FastAPI()
@@ -105,6 +130,8 @@ def waterDewPoint(dewPointFunc:dewPointCalc):
     results = dewPointFunc.calcDewPoint()
     results = {
         'waterDewPoint': float(results[0]),
-        'hydrocarbonDewPoint':float(results[1])
+        'hydrocarbonDewPoint':float(results[1]),
+        'hydrateTDewTScrubber':float(results[2]),
+        'MEGfrezeT':float(results[3])
     }
     return results

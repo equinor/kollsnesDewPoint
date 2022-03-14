@@ -69,8 +69,10 @@ class dewPointCalc(BaseModel):
         hydrateT = gasToExport.getHydrateEquilibriumTemperature()-273.15
 
         fluidExport = gasToExport.getFluid().clone()
+        #fluidExport.setMolarComposition([0.0, 0.0, 0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.0,0.0, 0.0,0.0,0.0])
+        fluidExport.init(0)
         fluidExport.removeComponent("water")
-        fluidExport.removeComponent("MEG")
+        #fluidExport.removeComponent("MEG")
         phaseEnvResults = phaseenvelope(fluidExport)
         cricobar = phaseEnvResults.get("cricondenbar")[1]
         cricotherm = phaseEnvResults.get("cricondentherm")[0]-273.15

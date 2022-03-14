@@ -15,6 +15,7 @@ class dewPointCalc(BaseModel):
     cooler1T: float=-5.0
     expOutPressure: float=67.0
     glycolFlow: float=10
+    expOutTemperature: float=-20.0
 
     def calcDewPoint(self):
         feedFluid = {'ComponentName':  ['water', 'MEG', "methane", "ethane", "propane","i-butane", "n-butane","i-pentane","n-pentane", "C6", "C7", "C8", "C9", "C10"], 
@@ -59,7 +60,10 @@ class dewPointCalc(BaseModel):
         mixer1.addStream(sep2.getGasOutStream())
         mixer1.addStream(glycolFeedStream)
 
-        expander1 = expander(mixer1.getOutStream(), self.expOutPressure)
+        expander1 = cooler(mixer1.getOutStream())
+        expander1.setOutTemperature(self.expOutTemperature, 'C')
+        expander1.setOutPressure(self.expOutPressure, 'bara')
+        #expander1 = expander(mixer1.getOutStream(), self.expOutPressure)
 
         sep3 = separator3phase(expander1.getOutStream())
 

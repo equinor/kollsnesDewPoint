@@ -18,16 +18,17 @@ class dewPointCalc(BaseModel):
 
     def calcDewPoint(self):
         feedFluid = {'ComponentName':  ['water', 'MEG', "methane", "ethane", "propane","i-butane", "n-butane","i-pentane","n-pentane", "C6", "C7", "C8", "C9", "C10"], 
-                'MolarComposition[-]':  [0.0, 0.0, 80.0, 6.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5, 0.5], 
-                'MolarMass[kg/mol]': [None,None, None,None,None,None, None,None,None,0.091, 0.110, 0.13, 0.15, 0.20],
-                'RelativeDensity[-]': [None,None, None,None,None,None, None,None,None, 0.7, 0.78, 0.8, 0.82, 0.83]
+                'MolarComposition[-]':  [0.0, 0.0, 80.0, 6.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 
+                'MolarMass[kg/mol]': [None,None, None,None,None,None, None,None,None,0.086, 0.093, 0.105, 0.123, 0.150],
+                'RelativeDensity[-]': [None,None, None,None,None,None, None,None,None, 0.664, 0.7, 0.75, 0.8, 0.83]
         }
 
         reservoirFluiddf = pd.DataFrame(feedFluid)
-        fluid7 = fluid_df(reservoirFluiddf)
+        fluid7 = fluid_df(reservoirFluiddf).autoSelectModel()
+        fluid7.setMultiPhaseCheck(True)
 
         glycolFluid = fluid7.clone()
-        glycolFluid.setMolarComposition([0.0, 1.0, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0])
+        glycolFluid.setMolarComposition([0.3, 0.7, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0])
 
         clearProcess()
         feedStream = stream(fluid7)
@@ -37,10 +38,10 @@ class dewPointCalc(BaseModel):
 
         glycolFeedStream = stream(glycolFluid)
         glycolFeedStream.setFlowRate(self.glycolFlow, 'kg/hr')
-        glycolFeedStream.setTemperature(self.feedTemperature, 'C')
-        glycolFeedStream.setPressure(self.feedPressure, 'barg')
+        glycolFeedStream.setTemperature(self.cooler1T, 'C')
+        glycolFeedStream.setPressure(self.sep1Pressure, 'bara')
 
-        slugCatcher = separator3phase(feedStream)
+        slugCatcher = separator(feedStream)
 
         saturatedGasFromSlugCatcher = saturator(slugCatcher.getGasOutStream(), 'water saturator')
 
@@ -51,6 +52,7 @@ class dewPointCalc(BaseModel):
 
         cooler1 = cooler(sep1.getGasOutStream())
         cooler1.setOutTemperature(self.cooler1T, 'C')
+
         sep2 = separator3phase(cooler1.getOutStream())
 
         mixer1 = mixer()
@@ -64,15 +66,12 @@ class dewPointCalc(BaseModel):
         gasToExport = stream(sep3.getGasOutStream())
 
         runProcess()
-
         gasToExport.setPressure(70.0, 'bara')
         hydrateT = gasToExport.getHydrateEquilibriumTemperature()-273.15
 
         fluidExport = gasToExport.getFluid().clone()
-        #fluidExport.setMolarComposition([0.0, 0.0, 0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.0,0.0, 0.0,0.0,0.0])
-        fluidExport.init(0)
         fluidExport.removeComponent("water")
-        #fluidExport.removeComponent("MEG")
+        fluidExport.removeComponent("MEG")
         phaseEnvResults = phaseenvelope(fluidExport)
         cricobar = phaseEnvResults.get("cricondenbar")[1]
         cricotherm = phaseEnvResults.get("cricondentherm")[0]-273.15

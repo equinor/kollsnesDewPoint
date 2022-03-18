@@ -18,10 +18,10 @@ class dewPointCalc(BaseModel):
     expOutTemperature: float=-20.0
 
     def calcDewPoint(self):
-        feedFluid = {'ComponentName':  ['water', 'MEG', "methane", "ethane", "propane","i-butane", "n-butane","i-pentane","n-pentane", "C6", "C7", "C8", "C9", "C10"], 
-                'MolarComposition[-]':  [0.0, 0.0, 80.0, 6.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], 
-                'MolarMass[kg/mol]': [None,None, None,None,None,None, None,None,None,0.086, 0.093, 0.105, 0.123, 0.150],
-                'RelativeDensity[-]': [None,None, None,None,None,None, None,None,None, 0.664, 0.7, 0.75, 0.8, 0.83]
+        feedFluid = {'ComponentName':  ['water', 'MEG', "nitrogen","CO2","methane", "ethane", "propane","i-butane", "n-butane","i-pentane","n-pentane", "C6", "C7", "C8", "C9", "C10","C11","C12","C13","C14","C15","C16","C17","C18"], 
+                'MolarComposition[-]':  [0.0, 0.0, 1.642125, 0.562613, 92.57445, 3.573913,0.374963,0.330001,0.039872,0.059775,0.012948,0.103441,0.210647,0.139683,0.050225,0.027926,.017926,0.01137,0.007099,0.004257,0.002424,0.00128,0.000612,0.000258], 
+                'MolarMass[kg/mol]': [None,None, None,None,None,None,None,None, None,None,None,0.08306162,0.08879617,0.103527,0.119918,0.1345865,0.1475065,0.1618353,0.175582,0.1913808,0.2065661,0.2215028,0.2367315,0.2790842],
+                'RelativeDensity[-]': [None,None, None,None,None,None,None,None, None,None,None, 0.67666,0.753736,0.76288,0.782873,0.803976,0.816404,0.83019,0.840552,0.85174,0.861973,0.872268,0.880661,0.90976]
         }
 
         reservoirFluiddf = pd.DataFrame(feedFluid)
@@ -29,7 +29,7 @@ class dewPointCalc(BaseModel):
         fluid7.setMultiPhaseCheck(True)
 
         glycolFluid = fluid7.clone()
-        glycolFluid.setMolarComposition([0.3, 0.7, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0])
+        glycolFluid.setMolarComposition([0.3, 0.7, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0])
 
         clearProcess()
         feedStream = stream(fluid7)
@@ -47,7 +47,7 @@ class dewPointCalc(BaseModel):
         saturatedGasFromSlugCatcher = saturator(slugCatcher.getGasOutStream(), 'water saturator')
 
         valve1 = valve(saturatedGasFromSlugCatcher.getOutStream())
-        valve1.setOutletPressure(self.sep1Pressure)
+        valve1.setOutletPressure(self.sep1Pressure, "bara")
 
         sep1 = separator3phase(valve1.getOutStream())
 

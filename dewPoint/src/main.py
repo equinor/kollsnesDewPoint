@@ -107,6 +107,8 @@ class dewPointCalc(BaseModel):
             phaseEnvResults = phaseenvelope(fluidExport)
             cricobar = phaseEnvResults.get("cricondenbar")[1]
             cricotherm = phaseEnvResults.get("cricondentherm")[0]-273.15
+            if(cricotherm<-100.0 or cricotherm>50.0):
+                cricotherm=-9999
         except:
             print("Could not calculate phase envelope - returning -9999")
             cricotherm = -9999

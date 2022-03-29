@@ -69,25 +69,33 @@ class dewPointCalc(BaseModel):
 
         gasToExport = stream(sep3.getGasOutStream())
 
-        runProcess()
-
+        runProcess()   
+        
         try:
-            gasToExport.setPressure(70.0, 'bara')
-            gasToExport.setTemperature(-10.0, 'C')
-            hydrateT = gasToExport.getHydrateEquilibriumTemperature()-273.15
-            hydrateTDewTScrubber = expander1.getOutStream().getHydrateEquilibriumTemperature()-273.15
+            gasToExportClone = gasToExport.clone()
+            gasToExportClone.setPressure(70.0, 'bara')
+            gasToExportClone.setTemperature(-10.0, 'C')
+            hydrateT = gasToExportClone.getHydrateEquilibriumTemperature()-273.15
+            expander1OutClone = expander1.getOutStream().clone()
+            hydrateTDewTScrubber = expander1OutClone.getHydrateEquilibriumTemperature()-273.15
+            if(hydrateT<-100.0):
+                hydrateT=-9999
+            if(hydrateTDewTScrubber<-100.0):
+                hydrateTDewTScrubber=-9999
         except:
             print("Could not find hydrate temperatures - returning -9999")
             hydrateT = -9999
             hydrateTDewTScrubber = -9999
 
-        #MEG freeze chack
-        MEGfreezeFluid = expander1.getOutStream().getFluid().clone()
+        #MEG freeze check
+        MEGfreezeFluid = expander1.getOutStream().getFluid().clone() 
         MEGfreezeFluid.setSolidPhaseCheck('MEG')
         MEGfreezeFluid.setTemperature(-10.0, 'C')
         try:
             freeze(MEGfreezeFluid)
             MEGfrezeT = MEGfreezeFluid.getTemperature('C')
+            if(MEGfrezeT<-100.0):
+                MEGfrezeT=-9999
         except:
             print("Could not find freezing point of MEG - returning -9999")
             MEGfrezeT = -9999

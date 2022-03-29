@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from neqsim.thermo.thermoTools import fluid_df
 from neqsim.process import stream, separator
 import pandas as pd
@@ -8,14 +8,30 @@ from neqsim.process import expander, mixer, stream, cooler, valve, separator3pha
 from neqsim.thermo import phaseenvelope,freeze
 
 class dewPointCalc(BaseModel):
-    feedFlowRateTrain1: float=11411.9
-    feedPressure: float=89.0
-    feedTemperature: float= 5.0
-    sep1Pressure: float=85.0
-    cooler1T: float=-5.0
-    expOutPressure: float=67.0
-    glycolFlow: float=10
-    expOutTemperature: float=-20.0
+    feedFlowRateTrain1: float= Field(
+        20.83, gt=-100, lt= 100.0, description="feed flow rate in unit MSm3/day"
+    )
+    feedPressure: float= Field(
+        91.96, gt=0, lt= 1000.0, description="feed pressure in unit bara"
+    )
+    feedTemperature: float= Field(
+        6.0, gt=-100, lt= 100.0, description="feed temperature in unit deg C"
+    )
+    sep1Pressure: float= Field(
+        87.94, gt=0, lt= 1000.0, description="separator pressure in unit bara"
+    )
+    cooler1T: float= Field(
+        13.0, gt=-100, lt= 100.0, description="cooler out temperature in unit deg C"
+    )
+    expOutPressure: float= Field(
+        68.18, gt=0, lt= 1000.0, description="expander out pressure in unit bara"
+    )
+    glycolFlow: float= Field(
+        0.128, gt=0, lt= 100.0, description="glycol flow rate in unit ???"
+    )
+    expOutTemperature: float= Field(
+        -20.0, gt=-100, lt= 100.0, description="expander out temperature in unit deg C"
+    )
 
     def calcDewPoint(self):
         feedFluid = {'ComponentName':  ['water', 'MEG', "nitrogen","CO2","methane", "ethane", "propane","i-butane", "n-butane","i-pentane","n-pentane", "C6", "C7", "C8", "C9", "C10","C11","C12","C13","C14","C15","C16","C17","C18"], 
@@ -116,10 +132,18 @@ class dewPointCalc(BaseModel):
         return [hydrateT, cricotherm, hydrateTDewTScrubber, MEGfrezeT]
 
 class dewPointResults(BaseModel):
-    waterDewPoint: float
-    hydrocarbonDewPoint: float
-    hydrateTDewTScrubber: float
-    MEGfrezeT: float
+    waterDewPoint: float= Field(
+        None, description="water dew point temperature [C]"
+    )
+    hydrocarbonDewPoint: float= Field(
+        None, description="hydrocarbon dew point temperature [C]"
+    )
+    hydrateTDewTScrubber: float= Field(
+        None, description="hydrate temperature in dew point scrubber [C]"
+    )
+    MEGfrezeT: float= Field(
+        None, description="Solid formation temperature of MEG in dew point scrubber [C]"
+    )
 
 
 app = FastAPI()

@@ -45,8 +45,8 @@ class dewPointCalc(BaseModel):
         fluid7.setMultiPhaseCheck(True)
 
         glycolFluid = fluid7.clone()
-        glycolFluid.setMolarComposition([0.3, 0.7, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0])
-
+        glycolFluid.setMolarComposition([0.53, 0.47, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0])
+        # should be set to 75 wt%
         feedFluidGvitB = {'ComponentName':  ['water', 'MEG', "nitrogen","CO2","methane", "ethane", "propane","i-butane", "n-butane","i-pentane","n-pentane", "C6", "C7", "C8", "C9", "C10","C11","C12","C13","C14","C15","C16","C17","C18"], 
                 'MolarComposition[-]':  [0.0, 0.0, 1.642125, 0.562613, 92.57445, 3.573913,0.0374963,0,0.00,0.00,0.00,0.0,0.0,0.0,0.0,0.0,.0,0.0,0.00,0.0,0.0,0.0,0.0,0.0], 
                 'MolarMass[kg/mol]': [None,None, None,None,None,None,None,None, None,None,None,0.08306162,0.08879617,0.103527,0.119918,0.1345865,0.1475065,0.1618353,0.175582,0.1913808,0.2065661,0.2215028,0.2367315,0.2790842],

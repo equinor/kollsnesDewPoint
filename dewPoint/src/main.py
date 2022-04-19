@@ -29,7 +29,7 @@ class dewPointCalc(BaseModel):
         fluid7.setMultiPhaseCheck(True)
 
         glycolFluid = fluid7.clone()
-        glycolFluid.setMolarComposition([0.3, 0.7, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0])
+        glycolFluid.setMolarComposition([0.53, 0.47, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0])
 
         clearProcess()
         feedStream = stream(fluid7)

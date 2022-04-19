@@ -30,7 +30,7 @@ class dewPointCalc(BaseModel):
 
         glycolFluid = fluid7.clone()
         glycolFluid.setMolarComposition([0.53, 0.47, 0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0,0.0])
-
+        #updated to 75 wt% MEG
         clearProcess()
         feedStream = stream(fluid7)
         feedStream.setFlowRate(self.feedFlowRateTrain1, 'kg/hr')

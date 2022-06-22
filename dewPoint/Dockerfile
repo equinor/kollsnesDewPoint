@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM openjdk:18.0-jdk-slim-buster
 RUN apt-get update -y && \
     apt-get install -y \
             python3 python3-pip

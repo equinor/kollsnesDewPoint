@@ -1,4 +1,5 @@
-FROM openjdk:18.0-jdk-slim-buster
+#FROM adoptopenjdk/openjdk16
+FROM eclipse-temurin:18.0.1_10-jdk
 RUN apt-get update -y && \
     apt-get install -y \
             python3 python3-pip
